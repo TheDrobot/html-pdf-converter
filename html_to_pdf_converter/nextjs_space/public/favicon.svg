@@ -1,0 +1,40 @@
+
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background circle -->
+  <circle cx="16" cy="16" r="16" fill="#0a0a0a"/>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="iconGradient" x1="8" y1="8" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#b0d235"/>
+      <stop offset="100%" stop-color="#8fb028"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- HTML/Document icon with arrow -->
+  <g transform="translate(6, 6)">
+    <!-- Document shape -->
+    <path d="M3 2C3 1.44772 3.44772 1 4 1H11.5858C11.851 1 12.1054 1.10536 12.2929 1.29289L15.7071 4.70711C15.8946 4.89464 16 5.149 16 5.41421V18C16 18.5523 15.5523 19 15 19H4C3.44772 19 3 18.5523 3 18V2Z" 
+          stroke="url(#iconGradient)" 
+          stroke-width="1.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          fill="none"/>
+    
+    <!-- Corner fold -->
+    <path d="M11 1V4C11 4.55228 11.4477 5 12 5H16" 
+          stroke="url(#iconGradient)" 
+          stroke-width="1.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          fill="none"/>
+    
+    <!-- HTML code lines -->
+    <line x1="6" y1="9" x2="13" y2="9" stroke="url(#iconGradient)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="6" y1="12" x2="11" y2="12" stroke="url(#iconGradient)" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="6" y1="15" x2="13" y2="15" stroke="url(#iconGradient)" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Arrow/Conversion indicator -->
+  <path d="M22 22L25 25L22 28" stroke="#b0d235" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

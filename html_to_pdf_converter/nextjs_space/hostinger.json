@@ -1,0 +1,25 @@
+{
+  "name": "html-to-pdf-converter",
+  "version": "1.0.0",
+  "description": "Convert HTML to PDF with real-time preview",
+  "main": "package.json",
+  "scripts": {
+    "start": "next start",
+    "build": "next build"
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_OUTPUT_MODE": "standalone"
+  },
+  "build": {
+    "commands": [
+      "npm install",
+      "npm run build"
+    ]
+  },
+  "deploy": {
+    "startCommand": "next start",
+    "restartPolicy": "always",
+    "healthCheckPath": "/api/health"
+  }
+}
