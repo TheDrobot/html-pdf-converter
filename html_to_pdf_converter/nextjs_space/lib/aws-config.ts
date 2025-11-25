@@ -22,8 +22,7 @@ export function createS3Client() {
 
   if (!accessKeyId || !secretAccessKey) {
     console.warn("AWS credentials not found. S3 functionality will not work.");
-    // For development, you might want to return a mock client or throw an error
-    throw new Error("AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) are required");
+    return null;
   }
 
   return new S3Client({
