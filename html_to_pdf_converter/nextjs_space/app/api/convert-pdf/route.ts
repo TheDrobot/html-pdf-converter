@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PDFDocument } from 'pdf-lib';
 import sharp from 'sharp';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import { existsSync } from 'fs';
 
 const isProd = process.env.NODE_ENV === 'production';
+const isVercel = !!process.env.VERCEL;
 
 // Funzione per trovare l'ultima riga con VERO contenuto in un'immagine
 async function findLastContentRow(imageBuffer: Buffer): Promise<number> {
@@ -85,10 +87,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Lancia Puppeteer con configurazione per container
-    const environment = isProd ? 'PRODUCTION' : 'DEVELOPMENT';
+    // Lancia Puppeteer con configurazione per Vercel/Lambda o container
+    const environment = isVercel ? 'VERCEL' : (isProd ? 'PRODUCTION' : 'DEVELOPMENT');
     console.log(`🚀 Launching browser in ${environment} mode...`);
-    
+
     // Common arguments for all environments
     const browserArgs = [
       '--no-sandbox',
@@ -98,27 +100,35 @@ export async function POST(request: NextRequest) {
       '--disable-software-rasterizer',
       '--disable-web-security',
       '--no-first-run',
-      '--disable-extensions'
+      '--disable-extensions',
+      '--single-process',
+      '--no-zygote'
     ];
-    
+
     const launchOptions: any = {
-      headless: 'new',
-      args: browserArgs,
-      ignoreHTTPSErrors: true
+      headless: chromium.headless,
+      args: isVercel ? chromium.args : browserArgs,
+      ignoreHTTPSErrors: true,
+      defaultViewport: chromium.defaultViewport
     };
-    
-    // In production, try to find system Chromium
-    if (isProd) {
+
+    // Configure executable path based on environment
+    if (isVercel) {
+      // Vercel/AWS Lambda: use @sparticuz/chromium
+      console.log('📦 Using @sparticuz/chromium for Vercel/Lambda...');
+      launchOptions.executablePath = await chromium.executablePath();
+    } else if (isProd) {
+      // Other production: try to find system Chromium
       console.log('📦 Looking for system Chromium in production...');
-      
+
       const possiblePaths = [
         '/usr/bin/chromium-browser',
         '/usr/bin/chromium',
         '/usr/bin/google-chrome',
         '/usr/bin/google-chrome-stable',
-        process.env.CHROME_PATH // Allow custom path via env variable
+        process.env.CHROME_PATH
       ].filter(Boolean);
-      
+
       let foundPath = null;
       for (const chromePath of possiblePaths) {
         if (chromePath && existsSync(chromePath)) {
@@ -127,44 +137,27 @@ export async function POST(request: NextRequest) {
           break;
         }
       }
-      
+
       if (foundPath) {
         launchOptions.executablePath = foundPath;
       } else {
-        console.log('⚠️ No system Chromium found, using Puppeteer bundled version');
-        console.log('💡 Tip: Install chromium in your container: apt-get install chromium-browser');
+        console.log('⚠️ No system Chromium found, will try Puppeteer bundled version');
       }
     } else {
+      // Development: use bundled Chromium
       console.log('📦 Using Puppeteer bundled Chromium in development...');
     }
-    
-    console.log('🔧 Launch options:', JSON.stringify(launchOptions, null, 2));
-    
+
+    console.log('🔧 Launch options:', JSON.stringify({ ...launchOptions, executablePath: launchOptions.executablePath ? 'SET' : 'NOT_SET' }, null, 2));
+
     try {
       browser = await puppeteer.launch(launchOptions);
       console.log('✅ Browser launched successfully');
     } catch (launchError) {
       console.error('❌ Failed to launch browser:', launchError);
-      
-      // Fallback: try without custom executable path
-      if (launchOptions.executablePath) {
-        console.log('🔄 Retrying without custom executable path...');
-        delete launchOptions.executablePath;
-        try {
-          browser = await puppeteer.launch(launchOptions);
-          console.log('✅ Browser launched successfully (fallback)');
-        } catch (fallbackError) {
-          throw new Error(
-            'Failed to launch browser. Please ensure Chromium is installed in your container. ' +
-            'Original error: ' + (fallbackError instanceof Error ? fallbackError.message : String(fallbackError))
-          );
-        }
-      } else {
-        throw new Error(
-          'Failed to launch browser. ' +
-          'Original error: ' + (launchError instanceof Error ? launchError.message : String(launchError))
-        );
-      }
+      throw new Error(
+        'Failed to launch browser: ' + (launchError instanceof Error ? launchError.message : String(launchError))
+      );
     }
 
     const page = await browser.newPage();
